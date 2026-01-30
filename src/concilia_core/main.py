@@ -14,6 +14,7 @@ app = FastAPI(
     version="0.1.0",
     contact={
         "name": "Valmar Júnior",
+
         "url": "https://github.com/valms",
     },
 )
