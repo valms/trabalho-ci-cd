@@ -1,0 +1,46 @@
+# --- Python Core ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual Environments (Poetry) ---
+# O Poetry pode criar o venv dentro do projeto se configurado
+.venv/
+env/
+venv/
+ENV/
+.idea/
+
+# --- Environment Variables (SEGURANÇA CRÍTICA) ---
+# Nunca suba chaves de banco ou API
+.env
+.env.prod
+.env.dev
+.env.local
+# Exceção: Mantenha um exemplo limpo para outros devs (ou você no futuro)
+! .env.example
+
+# --- IDEs & OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Distribuição / Builds ---
+dist/
+build/
+*.egg-info/
+
+# --- Testes e Coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Dados da Aplicação (Conciliação) ---
+# Ignorar uploads de extratos reais (OFX, PDF, CSV) para não vazar dados da sua namorada
+uploads/
+temp/
+data/
+*.log
+*.sqlite
