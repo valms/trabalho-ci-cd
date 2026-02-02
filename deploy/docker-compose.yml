@@ -1,0 +1,37 @@
+version: '3.8'
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app_data:
+
+services:
+  app:
+    image: concilia-core:${TAG:-latest}
+    container_name: concilia-app
+    pull_policy: never
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://app_user:app_pass@concilia-db:5432/concilia_db
+      - APP_VERSION=${TAG:-latest}
+    depends_on:
+      - concilia-db
+    networks:
+      - app-network
+
+  concilia-db:
+    image: postgres:15-alpine
+    container_name: concilia-db
+    restart: always
+    environment:
+      - POSTGRES_USER=app_user
+      - POSTGRES_PASSWORD=app_pass
+      - POSTGRES_DB=concilia_db
+    volumes:
+      - app_data:/var/lib/postgresql/data
+    networks:
+      - app-network

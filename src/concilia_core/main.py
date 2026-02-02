@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from src.concilia_core.api import health
+
+from src.concilia_core.api import health, transactions
 
 description = """
 ### MatchPoint - Conciliação Bancária Inteligente
@@ -14,9 +15,9 @@ app = FastAPI(
     version="0.1.0",
     contact={
         "name": "Valmar Júnior",
-
         "url": "https://github.com/valms",
     },
 )
 
 app.include_router(health.router)
+app.include_router(transactions.router)

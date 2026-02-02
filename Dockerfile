@@ -14,7 +14,7 @@ COPY pyproject.toml poetry.lock ./
 
 RUN poetry install --no-root --only main && rm -rf $POETRY_CACHE_DIR
 
-# Estágio 2: Run (Aqui faltava o FROM)
+# Estágio 2: Run
 FROM python:3.13-slim AS runtime
 
 # Definimos a variável novamente para o runtime saber onde procurar
