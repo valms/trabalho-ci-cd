@@ -1,0 +1,31 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'TAG', defaultValue: '', description: 'Ex: v1.0.1')
+        choice(name: 'ENVIRONMENT', choices: ['DEV', 'STG', 'PROD'], description: 'Ambiente de destino')
+    }
+
+    stages {
+        stage('Validar Cadeia de Promoção') {
+            steps {
+                script {
+                    if (ENVIRONMENT == 'STG') {
+                        sh "docker image inspect concilia-core:dev-${TAG} > /dev/null"
+                    } else if (ENVIRONMENT == 'PROD') {
+                        sh "docker image inspect concilia-core:stg-${TAG} > /dev/null"
+                    }
+                }
+            }
+        }
+
+        stage('Promover Tag Docker') {
+            steps {
+                script {
+                    def promotedTag = "${ENVIRONMENT.toLowerCase()}-${TAG}"
+                    sh "docker tag concilia-core:${TAG} concilia-core:${promotedTag}"
+                    echo "Imagem promovida com sucesso: ${promotedTag}"
+                }
+            }
+        }
+    }
+}

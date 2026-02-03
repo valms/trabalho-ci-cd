@@ -59,9 +59,9 @@ pipeline {
             }
         }
 
-        stage('Segurança do Repositório (Trivy)') {
+        stage('Segurança do Repositório (Trivy FS)') {
             steps {
-                echo "Pula Trivy FS para evitar erro de volume, confia no Trivy Image abaixo"
+                sh "docker run --rm -v ${env.WORKSPACE}:/root aquasec/trivy fs /root --exit-code 1 --severity HIGH,CRITICAL"
             }
         }
 
