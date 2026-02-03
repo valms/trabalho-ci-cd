@@ -83,7 +83,11 @@ pipeline {
         }
 
         stage('Gerar Versão (Tag Git)') {
-            when { branch 'main' }
+            when {
+                    expression {
+                        return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
+                    }
+                }
             steps {
                 script {
                     sh "docker tag ${DOCKER_IMAGE}:${GIT_COMMIT} ${DOCKER_IMAGE}:latest"
