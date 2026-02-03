@@ -95,8 +95,11 @@ pipeline {
                     sshagent(['github-ssh-key']) {
                         sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
                         def TAG = "v1.0.${env.BUILD_NUMBER}"
+
+                        sh 'mkdir -p ~/.ssh && touch ~/.ssh/known_hosts'
+                        sh 'ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts'
                         sh "git tag -a ${TAG} -m 'Jenkins Build'"
-                        sh "git push origin ${TAG}"
+                        sh "git push git@github.com:valms/trabalho-ci-cd.git ${TAG}"
                     }
                 }
             }
