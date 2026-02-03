@@ -1,15 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-Base = declarative_base()
-
-
-class Transaction(Base):
-    __tablename__ = "transactions"
-    id = Column(Integer, primary_key=True)
-    description = Column(String)
-    amount = Column(Float)
-    status = Column(String, default="PENDING")
+from src.concilia_core.service.models import Base, Transaction
 
 
 def verificar_conciliacao(valor_banco: float, valor_sistema: float):
