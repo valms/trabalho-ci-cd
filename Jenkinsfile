@@ -73,6 +73,7 @@ pipeline {
                     sh "docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest"
                 }
             }
+        }
 
         stage('Segurança da Imagem (Trivy)') {
             steps {
