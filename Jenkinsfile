@@ -68,11 +68,11 @@ pipeline {
         stage('Criar Imagem Docker') {
             steps {
                 script {
-                    GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-                    sh "docker build -t ${DOCKER_IMAGE}:${GIT_COMMIT} ."
+                    def TAG = "v1.0.${env.BUILD_NUMBER}"
+                    sh "docker build -t ${DOCKER_IMAGE}:${TAG} ."
+                    sh "docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest"
                 }
             }
-        }
 
         stage('Segurança da Imagem (Trivy)') {
             steps {
