@@ -1,11 +1,13 @@
 pipeline {
     agent any
+
     parameters {
         string(name: 'TAG', defaultValue: '', description: 'Ex: v1.0.33')
-        choice(name: 'ENVIRONMENT', choices: ['DEV', 'STG', 'PROD'], description: 'Ambiente de destino')
+        choice(name: 'ENVIRONMENT', choices: ['DEV', 'STG', 'PROD'], description: 'Selecione o ambiente')
     }
+
     stages {
-        stage('Validar Cadeia de Promoção') {
+        stage('Validar Cadeia') {
             steps {
                 script {
                     if (ENVIRONMENT == 'STG') {
@@ -16,9 +18,11 @@ pipeline {
                 }
             }
         }
+
         stage('Gerar Tag de Ambiente') {
             steps {
                 sh "docker tag concilia-core:${TAG} concilia-core:${ENVIRONMENT.toLowerCase()}-${TAG}"
+                echo "Promovido para ${ENVIRONMENT}: concilia-core:${ENVIRONMENT.toLowerCase()}-${TAG}"
             }
         }
     }

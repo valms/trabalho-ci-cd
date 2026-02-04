@@ -78,32 +78,30 @@ pipeline {
         stage('Segurança da Imagem (Trivy)') {
             steps {
                 script {
-                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL ${DOCKER_IMAGE}:${GIT_COMMIT}"
+                    def TAG = "v1.0.${env.BUILD_NUMBER}"
+                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL ${DOCKER_IMAGE}:${TAG}"
                 }
             }
         }
 
-        stage('Gerar Versão (Tag Git)') {
-            when {
-                    expression {
-                        return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
-                    }
-                }
-            steps {
-                script {
-                    sh "docker tag ${DOCKER_IMAGE}:${GIT_COMMIT} ${DOCKER_IMAGE}:latest"
-
-                    sshagent(['github-ssh-key']) {
-                        sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
-                        def TAG = "v1.0.${env.BUILD_NUMBER}"
-
-                        sh 'mkdir -p ~/.ssh && touch ~/.ssh/known_hosts'
-                        sh 'ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts'
-                        sh "git tag -a ${TAG} -m 'Jenkins Build'"
-                        sh "git push git@github.com:valms/trabalho-ci-cd.git ${TAG}"
-                    }
-                }
-            }
-        }
+       stage('Gerar Versão (Tag Git)') {
+           when {
+               expression {
+                   return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
+               }
+           }
+           steps {
+               script {
+                   def TAG = "v1.0.${env.BUILD_NUMBER}"
+                   sshagent(['github-ssh-key']) {
+                       sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
+                       sh 'mkdir -p ~/.ssh && touch ~/.ssh/known_hosts'
+                       sh 'ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts'
+                       sh "git tag -a ${TAG} -m 'Jenkins Build'"
+                       sh "git push git@github.com:valms/trabalho-ci-cd.git ${TAG}"
+                   }
+               }
+           }
+       }
     }
 }
