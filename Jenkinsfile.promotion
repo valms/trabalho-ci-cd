@@ -1,28 +1,33 @@
 pipeline {
     agent any
-
     parameters {
         string(name: 'TAG', defaultValue: '', description: 'Ex: v1.0.33')
         choice(name: 'ENVIRONMENT', choices: ['DEV', 'STG', 'PROD'], description: 'Selecione o ambiente')
     }
-
+    environment {
+        DOCKER_IMAGE = 'valms/concilia-core'
+    }
     stages {
-        stage('Validar Cadeia') {
+        stage('1. Validar Cadeia') {
             steps {
                 script {
-                    if (ENVIRONMENT == 'STG') {
-                        sh "docker image inspect concilia-core:dev-${TAG} > /dev/null"
-                    } else if (ENVIRONMENT == 'PROD') {
-                        sh "docker image inspect concilia-core:stg-${TAG} > /dev/null"
+                    if (params.TAG == '') error "A TAG é obrigatória!"
+
+                    if (params.ENVIRONMENT == 'STG') {
+                        sh "docker image inspect ${DOCKER_IMAGE}:dev-${params.TAG} > /dev/null"
+                    } else if (params.ENVIRONMENT == 'PROD') {
+                        sh "docker image inspect ${DOCKER_IMAGE}:stg-${params.TAG} > /dev/null"
                     }
                 }
             }
         }
-
-        stage('Gerar Tag de Ambiente') {
+        stage('2. Gerar Tag de Ambiente') {
             steps {
-                sh "docker tag concilia-core:${TAG} concilia-core:${ENVIRONMENT.toLowerCase()}-${TAG}"
-                echo "Promovido para ${ENVIRONMENT}: concilia-core:${ENVIRONMENT.toLowerCase()}-${TAG}"
+                script {
+                    def targetTag = "${params.ENVIRONMENT.toLowerCase()}-${params.TAG}"
+                    sh "docker tag ${DOCKER_IMAGE}:${params.TAG} ${DOCKER_IMAGE}:${targetTag}"
+                    echo "Promovido para ${params.ENVIRONMENT}: ${DOCKER_IMAGE}:${targetTag}"
+                }
             }
         }
     }
