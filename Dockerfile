@@ -1,9 +1,9 @@
 # Estágio 1: Build
 FROM python:3.13-slim AS builder
 
-#RUN apt-get update && apt-get upgrade -y && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN pip install poetry
 
@@ -21,9 +21,9 @@ RUN poetry install --no-root --only main && rm -rf $POETRY_CACHE_DIR
 # Estágio 2: Run
 FROM python:3.13-slim AS runtime
 
-#RUN apt-get update && apt-get upgrade -y && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* \
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
