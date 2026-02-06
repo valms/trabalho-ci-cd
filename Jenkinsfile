@@ -88,22 +88,22 @@ pipeline {
             }
         }
 
-        stage('8. Create Git Tag') {
-            when {
-                all {
-                    branch 'main'
-                    expression { env.CHANGE_ID == null }
-                }
-            }
-            steps {
-                script {
-                    sshagent(['github-ssh-key']) {
-                        sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
-                        sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
-                        sh "git push origin ${SEMVER}"
-                    }
-                }
-            }
-        }
+       stage('8. Create Git Tag') {
+           when {
+               allOf {
+                   branch 'main'
+                   expression { env.CHANGE_ID == null }
+               }
+           }
+           steps {
+               script {
+                   sshagent(['github-ssh-key']) {
+                       sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
+                       sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
+                       sh "git push origin ${SEMVER}"
+                   }
+               }
+           }
+           }
     }
 }
