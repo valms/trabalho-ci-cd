@@ -5,7 +5,6 @@
 Construir um ambiente com **Jenkins ou similar + SonarQube**:
 
 1. **Pipeline principal (CI)**: build + testes + Sonar + Trivy scan repo + Docker build + Trivy image + criação de tag Git (somente `main`).
-
 A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidades que acessam banco de dados** (ex.: cadastrar e consultar).
 
 ---
