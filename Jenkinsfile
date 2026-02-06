@@ -2,106 +2,108 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'concilia-core'
+        DOCKER_IMAGE = 'valms/concilia-core'
         SCANNER_HOME = tool 'SonarScanner'
+        SEMVER = "v1.0.${env.BUILD_NUMBER}"
     }
 
     stages {
-        stage('Baixar Código Fonte') {
-            steps { checkout scm }
+        stage('1. Checkout') {
+            steps {
+                checkout scm
+            }
         }
 
-        stage('Compilação e Testes Unitários') {
+        stage('2. Build & Unit Tests') {
              steps {
                  script {
-                     echo "Criando ambiente de teste isolado..."
+                     echo "Preparando ambiente para testes da aplicação concilia-core..."
 
                      def dockerfileTest = '''
                      FROM python:3.13-slim
                      WORKDIR /app
-                     COPY . /app
-                     RUN pip install poetry
-                     RUN poetry config virtualenvs.create false
+                     RUN pip install poetry && poetry config virtualenvs.create false
+                     COPY pyproject.toml poetry.lock* /app/
                      RUN poetry install --no-interaction --no-root
+                     COPY . /app
                      '''
                      writeFile file: 'Dockerfile.test', text: dockerfileTest
 
-                     sh 'docker build -t imagem-teste -f Dockerfile.test .'
+                     sh "docker build -t test-image:${env.BUILD_ID} -f Dockerfile.test ."
 
                      try {
-                         sh 'docker run --name container-teste imagem-teste poetry run pytest --cov=src --cov-report=xml:coverage.xml --cov-report=term'
+                         sh "docker run --name test-container-${env.BUILD_ID} test-image:${env.BUILD_ID} \
+                            poetry run pytest --cov=src --cov-report=xml:coverage.xml --cov-report=term"
 
-                         sh 'docker cp container-teste:/app/coverage.xml .'
+                         sh "docker cp test-container-${env.BUILD_ID}:/app/coverage.xml ."
 
                          sh "sed -i 's|/app|${env.WORKSPACE}|g' coverage.xml"
                      } finally {
-                         sh 'docker rm -f container-teste || true'
-                         sh 'docker rmi -f imagem-teste || true'
-                         sh 'rm Dockerfile.test'
+                         sh "docker rm -f test-container-${env.BUILD_ID} || true"
+                         sh "docker rmi -f test-image:${env.BUILD_ID} || true"
+                         sh "rm Dockerfile.test"
                      }
                  }
              }
         }
 
-        stage('Análise de Código (Sonar)') {
+        stage('3. SonarQube Scan') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh "${SCANNER_HOME}/bin/sonar-scanner"
+                    sh """
+                    ${SCANNER_HOME}/bin/sonar-scanner \
+                    -Dsonar.projectKey=concilia-core \
+                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                    -Dsonar.sources=src \
+                    -Dsonar.tests=tests
+                    """
                 }
             }
         }
 
-        stage('Aprovação de Qualidade') {
+        stage('4. Quality Gate Approval') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-        stage('Segurança do Repositório (Trivy FS)') {
+        stage('5. Trivy Repo Scan') {
             steps {
                 sh "docker run --rm -v ${env.WORKSPACE}:/root aquasec/trivy fs /root --exit-code 1 --severity HIGH,CRITICAL"
             }
         }
 
-        stage('Criar Imagem Docker') {
+        stage('6. Docker Build') {
             steps {
-                script {
-                    def TAG = "v1.0.${env.BUILD_NUMBER}"
-                    sh "docker build -t ${DOCKER_IMAGE}:${TAG} ."
-                    sh "docker tag ${DOCKER_IMAGE}:${TAG} ${DOCKER_IMAGE}:latest"
-                }
+                sh "docker build -t ${DOCKER_IMAGE}:${SEMVER} ."
+                sh "docker tag ${DOCKER_IMAGE}:${SEMVER} ${DOCKER_IMAGE}:latest"
             }
         }
 
-        stage('Segurança da Imagem (Trivy)') {
+        stage('7. Trivy Image Scan') {
             steps {
-                script {
-                    def TAG = "v1.0.${env.BUILD_NUMBER}"
-                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity CRITICAL ${DOCKER_IMAGE}:${TAG}"
-                }
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL ${DOCKER_IMAGE}:${SEMVER}"
             }
         }
 
-       stage('Gerar Versão (Tag Git)') {
-           when {
-               expression {
-                   return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
-               }
-           }
-           steps {
-               script {
-                   def TAG = "v1.0.${env.BUILD_NUMBER}"
-                   sshagent(['github-ssh-key']) {
-                       sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
-                       sh 'mkdir -p ~/.ssh && touch ~/.ssh/known_hosts'
-                       sh 'ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts'
-                       sh "git tag -a ${TAG} -m 'Jenkins Build'"
-                       sh "git push git@github.com:valms/trabalho-ci-cd.git ${TAG}"
-                   }
-               }
-           }
-       }
+        stage('8. Create Git Tag') {
+            when {
+                all {
+                    branch 'main'
+                    expression { env.CHANGE_ID == null }
+                }
+            }
+            steps {
+                script {
+                    sshagent(['github-ssh-key']) {
+                        sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
+                        sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
+                        sh "git push origin ${SEMVER}"
+                    }
+                }
+            }
+        }
     }
 }
