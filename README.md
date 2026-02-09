@@ -1,11 +1,21 @@
 # Trabalho em equipe (2 a 3 pessoas) — CI + Promoção (Delivery) com Jenkins, Sonar e Trivy (Docker/Compose)
 
+## Equipe
+
+Ana Gabrielly Gonçalves da Silva
+
+Francisco Valmar Isaias Silva Júnior
+
+Geovani Vitoriano Aguiar
+
 ## Objetivo
 
 Construir um ambiente com **Jenkins ou similar + SonarQube**:
 
-1. **Pipeline principal (CI)**: build + testes + Sonar + Trivy scan repo + Docker build + Trivy image + criação de tag Git (somente `main`).
-A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidades que acessam banco de dados** (ex.: cadastrar e consultar).
+1. **Pipeline principal (CI)**: build + testes + Sonar + Trivy scan repo + Docker build + Trivy image + criação de tag
+   Git (somente `main`).
+   A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidades que acessam banco de dados** (ex.:
+   cadastrar e consultar).
 
 ---
 
@@ -30,9 +40,9 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 * Deve ser **web**
 * Deve possuir **pelo menos duas funcionalidades** que **acessam banco de dados**, por exemplo:
 
-  * cadastro (CREATE)
-  * consulta (READ)
-  * (pode ser update/delete também, mas pelo menos duas)
+    * cadastro (CREATE)
+    * consulta (READ)
+    * (pode ser update/delete também, mas pelo menos duas)
 
 ---
 
@@ -54,15 +64,15 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 * **Cobertura mínima: 50%** (medida no Sonar e visível no vídeo), se for menos que 50% o pipeline quebra.
 * **Trivy: não pode haver HIGH ou CRITICAL**
 
-  * o pipeline deve falhar se encontrar HIGH/CRITICAL
+    * o pipeline deve falhar se encontrar HIGH/CRITICAL
 
 ## Tag Git
 
 * Deve ser criada somente:
 
-  * após merge no `main`
-  * quando o build não for PR
-  * quando pipeline estiver verde
+    * após merge no `main`
+    * quando o build não for PR
+    * quando pipeline estiver verde
 * A tag deve ser **publicada no repositório remoto** (GitHub)
 
 ---
@@ -73,10 +83,10 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 
 * O deploy será feito **manualmente**, fora do Jenkins, usando:
 
-  * `deploy/compose.yaml`
+    * `deploy/compose.yaml`
 * Deve ser possível reiniciar a stack quando necessário:
 
-  * `docker compose down && docker compose up -d` (ou equivalente)
+    * `docker compose down && docker compose up -d` (ou equivalente)
 * O compose deve usar **tag** gerada/promovida para definir a imagem
 
 ---
@@ -93,9 +103,11 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 
 Construir um ambiente com **Jenkins (ou similar) + SonarQube** e implementar o pipelines:
 
-1. **Pipeline de promoção (Delivery)**: promoção de tags por ambiente (DEV → STG → PROD) usando `docker tag`, sem deploy automático (deploy é manual via compose).
+1. **Pipeline de promoção (Delivery)**: promoção de tags por ambiente (DEV → STG → PROD) usando `docker tag`, sem deploy
+   automático (deploy é manual via compose).
 
-A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidades que acessam banco de dados** (ex.: cadastrar e consultar).
+A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidades que acessam banco de dados** (ex.:
+cadastrar e consultar).
 
 ---
 
@@ -110,20 +122,22 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 
 * **Vídeo de 15 minutos** mostrando execução real, com a equipe completa, incluindo:
 
-  1. Subir a stack de CI (Jenkins + Sonar + DB do Sonar, se necessário) via Docker Compose
-  2. **Configurar o Sonar** para o projeto (token + projeto + execução de análise)
-  3. Executar o pipeline principal e:
-     . mostrar que a análise no Sonar gerou **métricas visíveis** (ex.: coverage, bugs, vulnerabilities, code smells, quality gate/status)
-  4. Mostrar a **tag Git publicada no repositório remoto**, seguindo versionamento semantico (ex.: GitHub tags/releases list)
-  5. Mostrar a **tag no docker localmente**
-  6. Realizar **deploy manual** via `deploy/compose.yaml`, reiniciando a stack quando necessário
-  7. Executar o pipeline de promoção (com parâmetros) e mostrar:
-     . promoção DEV e deploy manual
-     . promoção STG e deploy manual
-     . promoção PROD e deploy manual
-  8. Demonstrar a aplicação web funcionando e evidenciar as 2 funcionalidades
-  9. Demostrar historico de build de pelo menos 5 execuções e alterações
-  10. Testar validação de deploy em prod sem a tag em STG. O pipeline de promotion deve falhar.
+    1. Subir a stack de CI (Jenkins + Sonar + DB do Sonar, se necessário) via Docker Compose
+    2. **Configurar o Sonar** para o projeto (token + projeto + execução de análise)
+    3. Executar o pipeline principal e:
+       . mostrar que a análise no Sonar gerou **métricas visíveis** (ex.: coverage, bugs, vulnerabilities, code smells,
+       quality gate/status)
+    4. Mostrar a **tag Git publicada no repositório remoto**, seguindo versionamento semantico (ex.: GitHub
+       tags/releases list)
+    5. Mostrar a **tag no docker localmente**
+    6. Realizar **deploy manual** via `deploy/compose.yaml`, reiniciando a stack quando necessário
+    7. Executar o pipeline de promoção (com parâmetros) e mostrar:
+       . promoção DEV e deploy manual
+       . promoção STG e deploy manual
+       . promoção PROD e deploy manual
+    8. Demonstrar a aplicação web funcionando e evidenciar as 2 funcionalidades
+    9. Demostrar historico de build de pelo menos 5 execuções e alterações
+    10. Testar validação de deploy em prod sem a tag em STG. O pipeline de promotion deve falhar.
 
 > Observação: deploy é **manual** (fora do pipeline). O pipeline só gera tags e promove tags.
 
@@ -134,16 +148,16 @@ A aplicação será uma **aplicação web**, com **pelo menos duas funcionalidad
 ## Regras
 
 * O deploy será feito **manualmente**, fora do Jenkins, usando:
-  * `deploy/compose.yaml`
+    * `deploy/compose.yaml`
 * Deve ser possível reiniciar a stack quando necessário:
-  * `docker compose down && docker compose up -d` (ou equivalente)
+    * `docker compose down && docker compose up -d` (ou equivalente)
 * O compose deve usar **tag** gerada/promovida para definir a imagem
 
 ## Testes pós-deploy (obrigatórios no vídeo)
 
 * Deve haver uma forma simples de testar a aplicação:
-  * endpoints web
-  * e evidência que a versão/tag atual está rodando (ex.: `/version`)
+    * endpoints web
+    * e evidência que a versão/tag atual está rodando (ex.: `/version`)
 
 ---
 
