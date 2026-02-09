@@ -91,19 +91,20 @@ pipeline {
        stage('8. Create Git Tag') {
            when {
                allOf {
-                   branch 'main'
+                   expression {
+                       return (env.BRANCH_NAME == 'main') || (env.GIT_BRANCH == 'origin/main')
+                   }
                    expression { env.CHANGE_ID == null }
                }
            }
            steps {
-               script {
-                   sshagent(['github-ssh-key']) {
-                       sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
-                       sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
-                       sh "git push origin ${SEMVER}"
-                   }
-               }
+              script {
+                 sshagent(['github-ssh-key']) {
+                     sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
+                     sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
+                     sh "git push origin ${SEMVER}"
+                 }
            }
-           }
+       }
     }
 }
