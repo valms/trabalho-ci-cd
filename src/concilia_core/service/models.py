@@ -5,7 +5,6 @@ Base = declarative_base()
 
 
 class Transaction(Base):
-    # irra
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True)
     description = Column(String)
