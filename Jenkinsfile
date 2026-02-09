@@ -104,7 +104,8 @@ pipeline {
                      sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
                      sh "git push origin ${SEMVER}"
                  }
-           }
-       }
+                }
+            }
+        }
     }
 }
