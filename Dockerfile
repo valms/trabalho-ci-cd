@@ -1,5 +1,5 @@
 # Estágio 1: Build
-FROM python:3.13-slim AS builder
+FROM python:3.13-slim-bookworm AS builder
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get clean && \
@@ -19,7 +19,7 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-root --only main && rm -rf $POETRY_CACHE_DIR
 
 # Estágio 2: Run
-FROM python:3.13-slim AS runtime
+FROM python:3.13-slim-bookworm AS runtime
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get clean && \
