@@ -2,19 +2,19 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'valms/concilia-core'
+        DOCKER_IMAGE = 'concilia-core'
         SCANNER_HOME = tool 'SonarScanner'
         SEMVER = "v1.0.${env.BUILD_NUMBER}"
     }
 
     stages {
-        stage('1. Checkout') {
+        stage('1. Checkout do Código Fonte') {
             steps {
                 checkout scm
             }
         }
 
-        stage('2. Build & Unit Tests') {
+        stage('2. Build do Ambiente e Testes Unitários') {
             steps {
                 script {
                     echo "Preparando ambiente para testes da aplicação concilia-core..."
@@ -47,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('3. SonarQube Scan') {
+        stage('3. Análise Estática (SonarQube)') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh """
@@ -61,7 +61,7 @@ pipeline {
             }
         }
 
-        stage('4. Quality Gate Approval') {
+        stage('4. Validação do Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -69,26 +69,26 @@ pipeline {
             }
         }
 
-        stage('5. Trivy Repo Scan') {
+        stage('5. Varredura de Vulnerabilidades (Sistema de Arquivos) - Trivy') {
             steps {
                 sh "docker run --rm -v ${env.WORKSPACE}:/root aquasec/trivy fs /root --exit-code 1 --severity HIGH,CRITICAL"
             }
         }
 
-        stage('6. Docker Build') {
+        stage('6. Construção da Imagem Docker') {
             steps {
                 sh "docker build -t ${DOCKER_IMAGE}:${SEMVER} ."
                 sh "docker tag ${DOCKER_IMAGE}:${SEMVER} ${DOCKER_IMAGE}:latest"
             }
         }
 
-        stage('7. Trivy Image Scan') {
+        stage('7. Varredura de Vulnerabilidades (Imagem Docker)') {
             steps {
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL ${DOCKER_IMAGE}:${SEMVER}"
             }
         }
 
-        stage('8. Create Git Tag') {
+        stage('8. Versionamento e Tag (Release Git)') {
             when {
                 expression {
                     return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
