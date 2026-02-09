@@ -15,36 +15,36 @@ pipeline {
         }
 
         stage('2. Build & Unit Tests') {
-             steps {
-                 script {
-                     echo "Preparando ambiente para testes da aplicação concilia-core..."
+            steps {
+                script {
+                    echo "Preparando ambiente para testes da aplicação concilia-core..."
 
-                     def dockerfileTest = '''
-                     FROM python:3.13-slim
-                     WORKDIR /app
-                     RUN pip install poetry && poetry config virtualenvs.create false
-                     COPY pyproject.toml poetry.lock* /app/
-                     RUN poetry install --no-interaction --no-root
-                     COPY . /app
-                     '''
-                     writeFile file: 'Dockerfile.test', text: dockerfileTest
+                    def dockerfileTest = '''
+                    FROM python:3.13-slim
+                    WORKDIR /app
+                    RUN pip install poetry && poetry config virtualenvs.create false
+                    COPY pyproject.toml poetry.lock* /app/
+                    RUN poetry install --no-interaction --no-root
+                    COPY . /app
+                    '''
+                    writeFile file: 'Dockerfile.test', text: dockerfileTest
 
-                     sh "docker build -t test-image:${env.BUILD_ID} -f Dockerfile.test ."
+                    sh "docker build -t test-image:${env.BUILD_ID} -f Dockerfile.test ."
 
-                     try {
-                         sh "docker run --name test-container-${env.BUILD_ID} test-image:${env.BUILD_ID} \
-                            poetry run pytest --cov=src --cov-report=xml:coverage.xml --cov-report=term"
+                    try {
+                        sh "docker run --name test-container-${env.BUILD_ID} test-image:${env.BUILD_ID} \
+                           poetry run pytest --cov=src --cov-report=xml:coverage.xml --cov-report=term"
 
-                         sh "docker cp test-container-${env.BUILD_ID}:/app/coverage.xml ."
+                        sh "docker cp test-container-${env.BUILD_ID}:/app/coverage.xml ."
 
-                         sh "sed -i 's|/app|${env.WORKSPACE}|g' coverage.xml"
-                     } finally {
-                         sh "docker rm -f test-container-${env.BUILD_ID} || true"
-                         sh "docker rmi -f test-image:${env.BUILD_ID} || true"
-                         sh "rm Dockerfile.test"
-                     }
-                 }
-             }
+                        sh "sed -i 's|/app|${env.WORKSPACE}|g' coverage.xml"
+                    } finally {
+                        sh "docker rm -f test-container-${env.BUILD_ID} || true"
+                        sh "docker rmi -f test-image:${env.BUILD_ID} || true"
+                        sh "rm Dockerfile.test"
+                    }
+                }
+            }
         }
 
         stage('3. SonarQube Scan') {
@@ -88,22 +88,22 @@ pipeline {
             }
         }
 
-       stage('8. Create Git Tag') {
-           when {
-               allOf {
-                   expression {
-                       return (env.BRANCH_NAME == 'main') || (env.GIT_BRANCH == 'origin/main')
-                   }
-                   expression { env.CHANGE_ID == null }
-               }
-           }
-           steps {
-              script {
-                 sshagent(['github-ssh-key']) {
-                     sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
-                     sh "git tag -a ${SEMVER} -m 'Release ${SEMVER} - Jenkins Build'"
-                     sh "git push origin ${SEMVER}"
-                 }
+        stage('8. Create Git Tag') {
+            when {
+                expression {
+                    return env.GIT_BRANCH == 'origin/main' || env.GIT_BRANCH == 'main' || env.BRANCH_NAME == 'main'
+                }
+            }
+            steps {
+                script {
+                    def TAG = "v1.0.${env.BUILD_NUMBER}"
+                    sshagent(['github-ssh-key']) {
+                        sh 'git config user.email "jenkins@ci.com" && git config user.name "Jenkins"'
+                        sh 'mkdir -p ~/.ssh && touch ~/.ssh/known_hosts'
+                        sh 'ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts'
+                        sh "git tag -a ${TAG} -m 'Jenkins Build'"
+                        sh "git push git@github.com:valms/trabalho-ci-cd.git ${TAG}"
+                    }
                 }
             }
         }
