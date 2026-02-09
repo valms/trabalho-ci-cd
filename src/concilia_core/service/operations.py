@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from src.concilia_core.service.models import Base, Transaction
 
 
-def verificar_conciliacao(valor_banco: float, valor_sistema: float):
-    if valor_banco == valor_sistema:
+def verificar_conciliacao(ValorBanco: float, valor_sistema: float):
+    if ValorBanco == valor_sistema:
         return "MATCH"
     return "DIVERGENTE"
 

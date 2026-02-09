@@ -5,7 +5,7 @@ pipeline {
         choice(name: 'ENVIRONMENT', choices: ['DEV', 'STG', 'PROD'], description: 'Selecione o ambiente')
     }
     environment {
-        DOCKER_IMAGE = 'valms/concilia-core'
+        DOCKER_IMAGE = 'concilia-core'
     }
     stages {
         stage('1. Validar Cadeia') {
